@@ -1,7 +1,9 @@
 name: "Solicitud de Pase Oficial"
 description: "Formulario estructurado para el pase de datos a producción con asignación de roles."
 title: "[LHCL]DAOPCREDICORP: Despliegue primer formulario"
-labels: ["tipo:pase"]
+labels:
+  - "tipo:pase"
+  - "ticket-regular"
 body:
   - type: markdown
     attributes:
