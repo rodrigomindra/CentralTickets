@@ -8,7 +8,6 @@ jobs:
 
 solicitud_pase:
 
-```
 if: contains(github.event.issue.labels.*.name, 'ticket-regular')
 
 runs-on: ubuntu-latest
@@ -21,11 +20,9 @@ steps:
       echo "Issue Regular recibida"
       echo "Numero: ${{ github.event.issue.number }}"
       echo "Titulo: ${{ github.event.issue.title }}"
-```
 
 stage_revision_checklist:
 
-```
 needs: solicitud_pase
 
 runs-on: ubuntu-latest
@@ -35,11 +32,9 @@ environment: Revision-Checklist
 steps:
 
   - run: echo "Checklist aprobado"
-```
 
 stage_aprobacion_seguridad:
 
-```
 needs: stage_revision_checklist
 
 runs-on: ubuntu-latest
@@ -49,11 +44,9 @@ environment: Aprobacion-Seguridad
 steps:
 
   - run: echo "Seguridad aprobada"
-```
 
 stage_planificacion_y_configuracion_dataops:
 
-```
 needs: stage_aprobacion_seguridad
 
 runs-on: ubuntu-latest
@@ -63,11 +56,9 @@ environment: Planificacion-Ambiente-DataOps
 steps:
 
   - run: echo "Planificacion aprobada"
-```
 
 stage_despliegue_remoto:
 
-```
 needs: stage_planificacion_y_configuracion_dataops
 
 uses: ./.github/workflows/reusable-deploy.yml
@@ -81,11 +72,9 @@ with:
   environment: QA
 
   script: V001__create_table.sql
-```
 
 stage_validacion_funcional_steward:
 
-```
 needs: stage_despliegue_remoto
 
 runs-on: ubuntu-latest
@@ -97,11 +86,9 @@ steps:
   - run: |
       echo "Validacion funcional completada"
       echo "Pase cerrado"
-```
 
 notificar_rechazo:
 
-```
 needs:
   - stage_revision_checklist
   - stage_aprobacion_seguridad
@@ -117,4 +104,3 @@ steps:
 
   - run: |
       echo "El flujo Regular se detuvo por rechazo o error"
-```
