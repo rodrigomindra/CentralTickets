@@ -24,7 +24,7 @@ on:
 
     secrets:
 
-      CHANGE_MGMT_TOKEN:
+      CHANGEMANGEMENTTOKEN:
         required: true
 
 jobs:
