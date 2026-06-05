@@ -1,0 +1,61 @@
+name: Ticket Manager
+
+on:
+  issues:
+    types: [opened]
+
+jobs:
+
+  detectar_ticket:
+
+    runs-on: ubuntu-latest
+
+    outputs:
+
+      es_regular: ${{ steps.validacion.outputs.es_regular }}
+
+      es_express: ${{ steps.validacion.outputs.es_express }}
+
+    steps:
+
+      - name: Detectar tipo de ticket
+
+        id: validacion
+
+        run: |
+
+          LABELS='${{ join(github.event.issue.labels.*.name, ',') }}'
+
+          echo "Labels detectados: $LABELS"
+
+          if [[ "$LABELS" == *"ticket-regular"* ]]; then
+            echo "es_regular=true" >> $GITHUB_OUTPUT
+          else
+            echo "es_regular=false" >> $GITHUB_OUTPUT
+          fi
+
+          if [[ "$LABELS" == *"ticket-express"* ]]; then
+            echo "es_express=true" >> $GITHUB_OUTPUT
+          else
+            echo "es_express=false" >> $GITHUB_OUTPUT
+          fi
+
+  flujo_regular:
+
+    needs: detectar_ticket
+
+    if: needs.detectar_ticket.outputs.es_regular == 'true'
+
+    uses: ./.github/workflows/regular-flow.yml
+
+    secrets: inherit
+
+  flujo_express:
+
+    needs: detectar_ticket
+
+    if: needs.detectar_ticket.outputs.es_express == 'true'
+
+    uses: ./.github/workflows/express-flow.yml
+
+    secrets: inherit
