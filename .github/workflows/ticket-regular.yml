@@ -1,8 +1,8 @@
 name: Ticket Regular
 
 on:
-  issues:
-    types: [opened]
+
+  workflow_call:
 
 jobs:
 
