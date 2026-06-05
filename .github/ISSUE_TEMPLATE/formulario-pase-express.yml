@@ -1,0 +1,80 @@
+name: "Solicitud de Pase Express"
+
+description: "Pase simplificado para cambios de bajo riesgo."
+
+title: "[EXPRESS] Solicitud de Pase"
+
+labels:
+  - "ticket-express"
+
+body:
+
+  - type: markdown
+    attributes:
+      value: |
+        # ⚡ Pase Express
+
+        Utilizar únicamente para cambios de bajo impacto y bajo riesgo.
+
+  - type: input
+    id: jira_subtask
+    attributes:
+      label: "🆔 Código Jira"
+      placeholder: "DATA-12345"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: squad
+    attributes:
+      label: "👥 Squad Solicitante"
+      options:
+        - "Squad Canales Digitales"
+        - "Squad Core Banking"
+        - "Squad Data & Analytics"
+        - "Squad CRM & Marketing"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: de_chapter_leader
+    attributes:
+      label: "🛡️ Data Engineer Referente"
+      options:
+        - "CL JUAN"
+        - "CL PEDRO"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: analista_seguridad
+    attributes:
+      label: "🔍 Analista de Seguridad"
+      options:
+        - "SecOps - Luis"
+        - "SecOps - Carlos"
+    validations:
+      required: true
+
+  - type: textarea
+    id: instructivos_despliegue
+    attributes:
+      label: "🚀 Instructivos de Despliegue"
+      description: "Indica las acciones a ejecutar."
+      placeholder: |
+        1. Ejecutar script.sql
+        2. Actualizar workflow
+        3. Validar ejecución
+    validations:
+      required: true
+
+  - type: textarea
+    id: instructivos_reversion
+    attributes:
+      label: "🔄 Plan de Reversión"
+      description: "Indica cómo revertir el cambio."
+      placeholder: |
+        1. Ejecutar rollback.sql
+        2. Restaurar versión anterior
+    validations:
+      required: true
