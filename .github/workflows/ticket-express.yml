@@ -1,8 +1,8 @@
 name: Ticket Express
 
 on:
-  issues:
-    types: [opened]
+
+  workflow_call:
 
 jobs:
 
