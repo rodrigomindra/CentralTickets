@@ -18,6 +18,15 @@ on:
         required: true
         type: string
 
+      issue:
+        required: false
+        type: string
+
+    secrets:
+
+      CHANGE_MGMT_TOKEN:
+        required: true
+
 jobs:
 
   deploy:
@@ -50,8 +59,19 @@ jobs:
 
                 environment: '${{ inputs.environment }}',
 
-                script: '${{ inputs.script }}'
+                script: '${{ inputs.script }}',
+
+                issue: '${{ inputs.issue }}'
 
               }
 
             })
+
+      - name: Confirmacion
+
+        run: |
+          echo "Workflow remoto lanzado"
+          echo "Repositorio: ${{ inputs.repository }}"
+          echo "Ambiente: ${{ inputs.environment }}"
+          echo "Script: ${{ inputs.script }}"
+          echo "Issue: ${{ inputs.issue }}"
