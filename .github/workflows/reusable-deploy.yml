@@ -41,7 +41,7 @@ jobs:
 
         with:
 
-          github-token: ${{ secrets.CHANGE_MGMT_TOKEN }}
+          github-token: ${{ secrets.CHANGEMANGEMENTTOKEN }}
 
           script: |
 
