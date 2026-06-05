@@ -4,8 +4,7 @@ description: "Pase simplificado para cambios de bajo riesgo."
 
 title: "[EXPRESS] Solicitud de Pase"
 
-labels:
-  - "ticket-express"
+labels: ["ticket-express"]
 
 body:
 
