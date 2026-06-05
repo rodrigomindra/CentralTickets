@@ -1,106 +1,106 @@
 name: Ticket Regular
 
 on:
-issues:
-types: [opened]
+  issues:
+    types: [opened]
 
 jobs:
 
-solicitud_pase:
+  solicitud_pase:
 
-if: contains(github.event.issue.labels.*.name, 'ticket-regular')
+    if: contains(github.event.issue.labels.*.name, 'ticket-regular')
 
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-steps:
+    steps:
 
-  - name: Inicializar solicitud
+      - name: Inicializar solicitud
 
-    run: |
-      echo "Issue Regular recibida"
-      echo "Numero: ${{ github.event.issue.number }}"
-      echo "Titulo: ${{ github.event.issue.title }}"
+        run: |
+          echo "Issue Regular recibida"
+          echo "Numero: ${{ github.event.issue.number }}"
+          echo "Titulo: ${{ github.event.issue.title }}"
 
-stage_revision_checklist:
+  stage_revision_checklist:
 
-needs: solicitud_pase
+    needs: solicitud_pase
 
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-environment: Revision-Checklist
+    environment: Revision-Checklist
 
-steps:
+    steps:
 
-  - run: echo "Checklist aprobado"
+      - run: echo "Checklist aprobado"
 
-stage_aprobacion_seguridad:
+  stage_aprobacion_seguridad:
 
-needs: stage_revision_checklist
+    needs: stage_revision_checklist
 
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-environment: Aprobacion-Seguridad
+    environment: Aprobacion-Seguridad
 
-steps:
+    steps:
 
-  - run: echo "Seguridad aprobada"
+      - run: echo "Seguridad aprobada"
 
-stage_planificacion_y_configuracion_dataops:
+  stage_planificacion_y_configuracion_dataops:
 
-needs: stage_aprobacion_seguridad
+    needs: stage_aprobacion_seguridad
 
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-environment: Planificacion-Ambiente-DataOps
+    environment: Planificacion-Ambiente-DataOps
 
-steps:
+    steps:
 
-  - run: echo "Planificacion aprobada"
+      - run: echo "Planificacion aprobada"
 
-stage_despliegue_remoto:
+  stage_despliegue_remoto:
 
-needs: stage_planificacion_y_configuracion_dataops
+    needs: stage_planificacion_y_configuracion_dataops
 
-uses: ./.github/workflows/reusable-deploy.yml
+    uses: ./.github/workflows/reusable-deploy.yml
 
-secrets: inherit
+    secrets: inherit
 
-with:
+    with:
 
-  repository: squad-pagos-db
+      repository: squad-pagos-db
 
-  environment: QA
+      environment: QA
 
-  script: V001__create_table.sql
+      script: V001__create_table.sql
 
-stage_validacion_funcional_steward:
+  stage_validacion_funcional_steward:
 
-needs: stage_despliegue_remoto
+    needs: stage_despliegue_remoto
 
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-environment: Validacion-Funcional-Steward
+    environment: Validacion-Funcional-Steward
 
-steps:
+    steps:
 
-  - run: |
-      echo "Validacion funcional completada"
-      echo "Pase cerrado"
+      - run: |
+          echo "Validacion funcional completada"
+          echo "Pase cerrado"
 
-notificar_rechazo:
+  notificar_rechazo:
 
-needs:
-  - stage_revision_checklist
-  - stage_aprobacion_seguridad
-  - stage_planificacion_y_configuracion_dataops
-  - stage_despliegue_remoto
-  - stage_validacion_funcional_steward
+    needs:
+      - stage_revision_checklist
+      - stage_aprobacion_seguridad
+      - stage_planificacion_y_configuracion_dataops
+      - stage_despliegue_remoto
+      - stage_validacion_funcional_steward
 
-if: failure()
+    if: failure()
 
-runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-steps:
+    steps:
 
-  - run: |
-      echo "El flujo Regular se detuvo por rechazo o error"
+      - run: |
+          echo "El flujo Regular se detuvo por rechazo o error"
