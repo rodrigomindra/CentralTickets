@@ -1,0 +1,57 @@
+name: Reusable Deploy
+
+on:
+
+  workflow_call:
+
+    inputs:
+
+      repository:
+        required: true
+        type: string
+
+      environment:
+        required: true
+        type: string
+
+      script:
+        required: true
+        type: string
+
+jobs:
+
+  deploy:
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Lanzar workflow remoto
+
+        uses: actions/github-script@v7
+
+        with:
+
+          github-token: ${{ secrets.CHANGE_MGMT_TOKEN }}
+
+          script: |
+
+            await github.rest.actions.createWorkflowDispatch({
+
+              owner: context.repo.owner,
+
+              repo: '${{ inputs.repository }}',
+
+              workflow_id: 'deploy.yml',
+
+              ref: 'main',
+
+              inputs: {
+
+                environment: '${{ inputs.environment }}',
+
+                script: '${{ inputs.script }}'
+
+              }
+
+            })
