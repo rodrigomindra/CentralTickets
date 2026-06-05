@@ -1,0 +1,78 @@
+name: Ticket Express
+
+on:
+issues:
+types: [opened]
+
+jobs:
+
+solicitud_pase:
+
+if: contains(github.event.issue.labels.*.name, 'ticket-express')
+
+runs-on: ubuntu-latest
+
+steps:
+
+  - name: Inicializar solicitud
+
+    run: |
+      echo "Issue Express recibida"
+      echo "Numero: ${{ github.event.issue.number }}"
+      echo "Titulo: ${{ github.event.issue.title }}"
+
+stage_revision_checklist:
+
+needs: solicitud_pase
+
+runs-on: ubuntu-latest
+
+environment: Revision-Checklist
+
+steps:
+
+  - run: echo "Checklist aprobado"
+
+stage_aprobacion_seguridad:
+
+needs: stage_revision_checklist
+
+runs-on: ubuntu-latest
+
+environment: Aprobacion-Seguridad
+
+steps:
+
+  - run: echo "Seguridad aprobada"
+
+stage_despliegue_remoto:
+
+needs: stage_aprobacion_seguridad
+
+uses: ./.github/workflows/reusable-deploy.yml
+
+secrets: inherit
+
+with:
+
+  repository: squad-pagos-db
+
+  environment: QA
+
+  script: V001__create_table.sql
+
+notificar_rechazo:
+
+needs:
+  - stage_revision_checklist
+  - stage_aprobacion_seguridad
+  - stage_despliegue_remoto
+
+if: failure()
+
+runs-on: ubuntu-latest
+
+steps:
+
+  - run: |
+      echo "El flujo Express se detuvo por rechazo o error"
