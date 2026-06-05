@@ -1,0 +1,14 @@
+name: Test Express
+
+on:
+  issues:
+    types:
+      - opened
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Test
+        run: echo "Hola"
