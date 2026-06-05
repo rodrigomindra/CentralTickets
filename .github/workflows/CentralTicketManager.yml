@@ -46,7 +46,7 @@ jobs:
 
     if: needs.detectar_ticket.outputs.es_regular == 'true'
 
-    uses: ./.github/workflows/regular-flow.yml
+    uses: ./.github/workflows/ticket-regular.yml
 
     secrets: inherit
 
@@ -56,6 +56,6 @@ jobs:
 
     if: needs.detectar_ticket.outputs.es_express == 'true'
 
-    uses: ./.github/workflows/express-flow.yml
+    uses: ./.github/workflows/ticket-express.yml
 
     secrets: inherit
