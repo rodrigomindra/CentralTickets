@@ -9,7 +9,7 @@ on:
         required: true
         type: string
 
-      script:
+      environment:
         required: true
         type: string
 
@@ -26,5 +26,3 @@ jobs:
       repository: ${{ inputs.repository }}
 
       environment: CERT
-
-      script: ${{ inputs.script }}
