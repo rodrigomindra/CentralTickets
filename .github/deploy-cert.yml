@@ -1,0 +1,30 @@
+name: Deploy CERT
+
+on:
+  workflow_call:
+
+    inputs:
+
+      repository:
+        required: true
+        type: string
+
+      script:
+        required: true
+        type: string
+
+jobs:
+
+  deploy_cert:
+
+    uses: ./.github/workflows/reusable-deploy.yml
+
+    secrets: inherit
+
+    with:
+
+      repository: ${{ inputs.repository }}
+
+      environment: CERT
+
+      script: ${{ inputs.script }}
