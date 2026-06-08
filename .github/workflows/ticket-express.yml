@@ -102,38 +102,6 @@ jobs:
           echo "Validando pipelines"
           echo "Validacion tecnica OK"
 
-  cierre_issue:
-
-    needs: stage_validacion_tecnica
-
-    runs-on: ubuntu-latest
-
-    permissions:
-      issues: write
-
-    steps:
-
-      - name: Cerrar Issue
-
-        uses: actions/github-script@v7
-
-        with:
-
-          script: |
-
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: Number('${{ inputs.issue_number }}'),
-              state: 'closed'
-            })
-
-      - name: Confirmacion
-
-        run: |
-          echo "Issue cerrada automaticamente"
-          echo "Pase Express completado exitosamente"
-
   notificar_rechazo:
 
     needs:
