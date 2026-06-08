@@ -54,7 +54,7 @@ jobs:
 
               issue_number: Number('${{ inputs.issue_number }}'),
 
-              body: '🚀 Solicitud de pase recibida. Inicio del flujo Regular.'
+              body: '✅ Solicitud de pase recibida. Inicio del flujo Regular.'
 
             })
 
@@ -166,7 +166,7 @@ jobs:
 
       repository: SquadCredicorpData
 
-      script: V001__create_table.sql
+      environment: CERT
 
   stage_validacion_funcional_cert:
 
@@ -214,7 +214,7 @@ jobs:
 
       repository: SquadCredicorpData
 
-      script: V001__create_table.sql
+      environment: PROD
 
   stage_validacion_tecnica_prod:
 
