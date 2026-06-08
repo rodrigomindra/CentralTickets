@@ -134,6 +134,8 @@ jobs:
 
       repository: SquadCredicorpData
 
+      environment: CERT
+
   comentario_cert:
 
     needs: deploy_cert
@@ -173,6 +175,8 @@ jobs:
     with:
 
       repository: SquadCredicorpData
+
+      environment: PROD
 
   comentario_prod:
 
