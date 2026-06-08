@@ -62,7 +62,7 @@ jobs:
 
     needs: stage_aprobacion_seguridad
 
-    uses: ./.github/workflows/reusable-deploy.yml
+    uses: ./.github/workflows/deploy-cert.yml
 
     secrets: inherit
 
@@ -72,13 +72,11 @@ jobs:
 
       environment: CERT
 
-      script: V001__create_table.sql
-
   deploy_prod:
 
     needs: deploy_cert
 
-    uses: ./.github/workflows/reusable-deploy.yml
+    uses: ./.github/workflows/deploy-prod.yml
 
     secrets: inherit
 
@@ -87,8 +85,6 @@ jobs:
       repository: SquadCredicorpData
 
       environment: PROD
-
-      script: V001__create_table.sql
 
   stage_validacion_tecnica:
 
