@@ -73,7 +73,7 @@ jobs:
 
     needs: stage_planificacion_y_configuracion_dataops
 
-    uses: ./.github/workflows/reusable-deploy.yml
+    uses: ./.github/workflows/deploy-cert.yml
 
     secrets: inherit
 
@@ -82,8 +82,6 @@ jobs:
       repository: SquadCredicorpData
 
       environment: CERT
-
-      script: V001__create_table.sql
 
   stage_validacion_funcional_cert:
 
@@ -103,7 +101,7 @@ jobs:
 
     needs: stage_validacion_funcional_cert
 
-    uses: ./.github/workflows/reusable-deploy.yml
+    uses: ./.github/workflows/deploy-prod.yml
 
     secrets: inherit
 
@@ -112,8 +110,6 @@ jobs:
       repository: SquadCredicorpData
 
       environment: PROD
-
-      script: V001__create_table.sql
 
   stage_validacion_tecnica_prod:
 
