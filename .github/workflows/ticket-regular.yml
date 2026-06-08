@@ -1,14 +1,25 @@
 name: Ticket Regular
 
 on:
-
   workflow_call:
+
+    inputs:
+
+      issue_number:
+        required: true
+        type: string
+
+      issue_title:
+        required: true
+        type: string
+
+      issue_author:
+        required: true
+        type: string
 
 jobs:
 
   solicitud_pase:
-
-    if: contains(github.event.issue.labels.*.name, 'ticket-regular')
 
     runs-on: ubuntu-latest
 
@@ -18,8 +29,9 @@ jobs:
 
         run: |
           echo "Issue Regular recibida"
-          echo "Numero: ${{ github.event.issue.number }}"
-          echo "Titulo: ${{ github.event.issue.title }}"
+          echo "Numero: ${{ inputs.issue_number }}"
+          echo "Titulo: ${{ inputs.issue_title }}"
+          echo "Solicitante: ${{ inputs.issue_author }}"
 
   stage_revision_checklist:
 
@@ -57,7 +69,7 @@ jobs:
 
       - run: echo "Planificacion aprobada"
 
-  stage_despliegue_remoto:
+  deploy_cert:
 
     needs: stage_planificacion_y_configuracion_dataops
 
@@ -69,23 +81,101 @@ jobs:
 
       repository: SquadCredicorpData
 
-      environment: QA
+      environment: CERT
 
       script: V001__create_table.sql
 
-  stage_validacion_funcional_steward:
+  stage_validacion_funcional_cert:
 
-    needs: stage_despliegue_remoto
+    needs: deploy_cert
 
     runs-on: ubuntu-latest
 
-    environment: Validacion-Funcional-Steward
+    environment: Validacion-Funcional-Certificacion
 
     steps:
 
       - run: |
-          echo "Validacion funcional completada"
-          echo "Pase cerrado"
+          echo "Validacion funcional CERT completada"
+          echo "Aprobado para Produccion"
+
+  deploy_prod:
+
+    needs: stage_validacion_funcional_cert
+
+    uses: ./.github/workflows/reusable-deploy.yml
+
+    secrets: inherit
+
+    with:
+
+      repository: SquadCredicorpData
+
+      environment: PROD
+
+      script: V001__create_table.sql
+
+  stage_validacion_tecnica_prod:
+
+    needs: deploy_prod
+
+    runs-on: ubuntu-latest
+
+    environment: Validacion-Tecnica-Produccion
+
+    steps:
+
+      - run: |
+          echo "Validando logs"
+          echo "Validando jobs"
+          echo "Validando pipelines"
+          echo "Validacion tecnica OK"
+
+  stage_validacion_funcional_prod:
+
+    needs: stage_validacion_tecnica_prod
+
+    runs-on: ubuntu-latest
+
+    environment: Validacion-Funcional-Produccion
+
+    steps:
+
+      - run: |
+          echo "Validacion funcional de negocio"
+          echo "Validacion funcional OK"
+
+  cierre_issue:
+
+    needs: stage_validacion_funcional_prod
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+
+      - name: Cerrar Issue
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number('${{ inputs.issue_number }}'),
+              state: 'closed'
+            })
+
+      - name: Confirmacion
+
+        run: |
+          echo "Issue cerrada automaticamente"
+          echo "Pase completado exitosamente"
 
   notificar_rechazo:
 
@@ -93,8 +183,11 @@ jobs:
       - stage_revision_checklist
       - stage_aprobacion_seguridad
       - stage_planificacion_y_configuracion_dataops
-      - stage_despliegue_remoto
-      - stage_validacion_funcional_steward
+      - deploy_cert
+      - stage_validacion_funcional_cert
+      - deploy_prod
+      - stage_validacion_tecnica_prod
+      - stage_validacion_funcional_prod
 
     if: failure()
 
