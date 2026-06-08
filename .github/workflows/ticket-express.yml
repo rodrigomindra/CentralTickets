@@ -18,6 +18,10 @@ on:
         required: true
         type: string
 
+permissions:
+
+  issues: write
+
 jobs:
 
   solicitud_pase:
@@ -34,6 +38,26 @@ jobs:
           echo "Titulo: ${{ inputs.issue_title }}"
           echo "Solicitante: ${{ inputs.issue_author }}"
 
+      - name: Registrar inicio
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Solicitud de pase Express recibida. Inicio del flujo.'
+
+            })
+
   stage_revision_checklist:
 
     needs: solicitud_pase
@@ -45,6 +69,26 @@ jobs:
     steps:
 
       - run: echo "Checklist aprobado"
+
+      - name: Registrar checklist
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Checklist aprobado.'
+
+            })
 
   stage_aprobacion_seguridad:
 
@@ -58,6 +102,26 @@ jobs:
 
       - run: echo "Seguridad aprobada"
 
+      - name: Registrar seguridad
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Aprobación de Seguridad completada.'
+
+            })
+
   deploy_cert:
 
     needs: stage_aprobacion_seguridad
@@ -70,11 +134,37 @@ jobs:
 
       repository: SquadCredicorpData
 
-      environment: CERT
+  comentario_cert:
+
+    needs: deploy_cert
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Registrar CERT
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Despliegue en CERT completado.'
+
+            })
 
   deploy_prod:
 
-    needs: deploy_cert
+    needs: comentario_cert
 
     uses: ./.github/workflows/deploy-prod.yml
 
@@ -84,11 +174,37 @@ jobs:
 
       repository: SquadCredicorpData
 
-      environment: PROD
+  comentario_prod:
+
+    needs: deploy_prod
+
+    runs-on: ubuntu-latest
+
+    steps:
+
+      - name: Registrar PROD
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Despliegue en PROD completado.'
+
+            })
 
   stage_validacion_tecnica:
 
-    needs: deploy_prod
+    needs: comentario_prod
 
     runs-on: ubuntu-latest
 
@@ -102,12 +218,53 @@ jobs:
           echo "Validando pipelines"
           echo "Validacion tecnica OK"
 
+      - name: Registrar validacion tecnica
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Validación técnica en Producción completada.'
+
+            })
+
+      - name: Registrar cierre exitoso
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '✅ Flujo Express completado exitosamente. Pendiente de cierre automático de la Issue.'
+
+            })
+
   notificar_rechazo:
 
     needs:
       - stage_revision_checklist
       - stage_aprobacion_seguridad
       - deploy_cert
+      - comentario_cert
       - deploy_prod
       - stage_validacion_tecnica
 
@@ -119,3 +276,23 @@ jobs:
 
       - run: |
           echo "El flujo Express se detuvo por rechazo o error"
+
+      - name: Registrar error
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: Number('${{ inputs.issue_number }}'),
+
+              body: '❌ El flujo Express se detuvo por rechazo o error.'
+
+            })
