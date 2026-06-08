@@ -4,11 +4,23 @@ on:
 
   workflow_call:
 
+    inputs:
+
+      issue_number:
+        required: true
+        type: string
+
+      issue_title:
+        required: true
+        type: string
+
+      issue_author:
+        required: true
+        type: string
+
 jobs:
 
   solicitud_pase:
-
-    if: contains(github.event.issue.labels.*.name, 'ticket-express')
 
     runs-on: ubuntu-latest
 
@@ -18,8 +30,9 @@ jobs:
 
         run: |
           echo "Issue Express recibida"
-          echo "Numero: ${{ github.event.issue.number }}"
-          echo "Titulo: ${{ github.event.issue.title }}"
+          echo "Numero: ${{ inputs.issue_number }}"
+          echo "Titulo: ${{ inputs.issue_title }}"
+          echo "Solicitante: ${{ inputs.issue_author }}"
 
   stage_revision_checklist:
 
@@ -45,7 +58,7 @@ jobs:
 
       - run: echo "Seguridad aprobada"
 
-  stage_despliegue_remoto:
+  deploy_cert:
 
     needs: stage_aprobacion_seguridad
 
@@ -57,16 +70,82 @@ jobs:
 
       repository: SquadCredicorpData
 
-      environment: QA
+      environment: CERT
 
       script: V001__create_table.sql
+
+  deploy_prod:
+
+    needs: deploy_cert
+
+    uses: ./.github/workflows/reusable-deploy.yml
+
+    secrets: inherit
+
+    with:
+
+      repository: SquadCredicorpData
+
+      environment: PROD
+
+      script: V001__create_table.sql
+
+  stage_validacion_tecnica:
+
+    needs: deploy_prod
+
+    runs-on: ubuntu-latest
+
+    environment: Validacion-Tecnica-Produccion
+
+    steps:
+
+      - run: |
+          echo "Validando logs"
+          echo "Validando jobs"
+          echo "Validando pipelines"
+          echo "Validacion tecnica OK"
+
+  cierre_issue:
+
+    needs: stage_validacion_tecnica
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      issues: write
+
+    steps:
+
+      - name: Cerrar Issue
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.update({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number('${{ inputs.issue_number }}'),
+              state: 'closed'
+            })
+
+      - name: Confirmacion
+
+        run: |
+          echo "Issue cerrada automaticamente"
+          echo "Pase Express completado exitosamente"
 
   notificar_rechazo:
 
     needs:
       - stage_revision_checklist
       - stage_aprobacion_seguridad
-      - stage_despliegue_remoto
+      - deploy_cert
+      - deploy_prod
+      - stage_validacion_tecnica
 
     if: failure()
 
