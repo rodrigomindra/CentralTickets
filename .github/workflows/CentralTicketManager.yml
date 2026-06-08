@@ -50,6 +50,14 @@ jobs:
 
     secrets: inherit
 
+    with:
+
+      issue_number: ${{ github.event.issue.number }}
+
+      issue_title: ${{ github.event.issue.title }}
+
+      issue_author: ${{ github.event.issue.user.login }}
+
   flujo_express:
 
     needs: detectar_ticket
@@ -59,3 +67,11 @@ jobs:
     uses: ./.github/workflows/ticket-express.yml
 
     secrets: inherit
+
+    with:
+
+      issue_number: ${{ github.event.issue.number }}
+
+      issue_title: ${{ github.event.issue.title }}
+
+      issue_author: ${{ github.event.issue.user.login }}
