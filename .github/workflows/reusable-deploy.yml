@@ -14,10 +14,6 @@ on:
         required: true
         type: string
 
-      script:
-        required: true
-        type: string
-
       issue:
         required: false
         type: string
@@ -59,8 +55,6 @@ jobs:
 
                 environment: '${{ inputs.environment }}',
 
-                script: '${{ inputs.script }}',
-
                 issue: '${{ inputs.issue }}'
 
               }
@@ -73,5 +67,4 @@ jobs:
           echo "Workflow remoto lanzado"
           echo "Repositorio: ${{ inputs.repository }}"
           echo "Ambiente: ${{ inputs.environment }}"
-          echo "Script: ${{ inputs.script }}"
           echo "Issue: ${{ inputs.issue }}"
