@@ -1,9 +1,12 @@
 name: Ticket Manager
+
 run-name: "Ticket #${{ github.event.issue.number }} - ${{ github.event.issue.title }}"
 
 on:
+
   issues:
-    types: [opened]
+    types:
+      - opened
 
 permissions:
   issues: write
@@ -80,15 +83,11 @@ jobs:
 
       issue_author: ${{ github.event.issue.user.login }}
 
-  cierre_issue:
+  validar_cierre:
 
     needs:
       - flujo_regular
       - flujo_express
-
-    if: |
-      always() &&
-      contains(needs.*.result, 'success')
 
     runs-on: ubuntu-latest
 
@@ -97,13 +96,52 @@ jobs:
 
     steps:
 
-      - name: Cerrar Issue
+      - name: Obtener labels actuales
+
+        id: labels
 
         uses: actions/github-script@v7
 
         with:
 
           script: |
+
+            const issue = await github.rest.issues.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: ${{ github.event.issue.number }}
+            })
+
+            const labels = issue.data.labels.map(l => l.name)
+
+            core.setOutput('labels', labels.join(','))
+
+      - name: Mostrar labels
+
+        run: |
+          echo "${{ steps.labels.outputs.labels }}"
+
+      - name: Cerrar issue finalizada
+
+        if: contains(steps.labels.outputs.labels, 'finalizado')
+
+        uses: actions/github-script@v7
+
+        with:
+
+          script: |
+
+            await github.rest.issues.createComment({
+
+              owner: context.repo.owner,
+
+              repo: context.repo.repo,
+
+              issue_number: ${{ github.event.issue.number }},
+
+              body: '✅ Ticket finalizado correctamente. Se procede al cierre automático de la Issue.'
+
+            })
 
             await github.rest.issues.update({
 
@@ -117,11 +155,17 @@ jobs:
 
             })
 
-      - name: Confirmacion
+      - name: Mantener issue abierta
+
+        if: |
+          !contains(steps.labels.outputs.labels, 'finalizado')
 
         run: |
 
-          echo "========================================"
-          echo "Issue cerrada automaticamente"
-          echo "Numero: ${{ github.event.issue.number }}"
-          echo "========================================"
+          echo "La Issue permanece abierta"
+
+          echo "Motivos posibles:"
+          echo "- pendiente-reintento"
+          echo "- reversion-requerida"
+          echo "- reversion-completada"
+          echo "- ticket en proceso"
