@@ -373,7 +373,7 @@ jobs:
 
               issue_number: Number('${{ inputs.issue_number }}'),
 
-              labels: ['aprobado']
+              labels: ['finalizado']
 
             })
 
