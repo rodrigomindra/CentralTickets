@@ -1,6 +1,6 @@
 name: "🛠️ Solicitud de Pase Regular"
 description: "Formulario técnico para un intento de despliegue regular a producción."
-title: "[REGULAR]: "
+title: "Sub-Issue - [REGULAR]: "
 
 labels: ["ticket-regular"]
 

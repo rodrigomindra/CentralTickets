@@ -1,6 +1,6 @@
 name: "⚡ Solicitud de Pase Express"
 description: "Formulario técnico simplificado para un intento de despliegue rápido o de bajo riesgo."
-title: "[EXPRESS]: "
+title: "Sub-Issue - [EXPRESS]: "
 
 labels: ["ticket-express"]
 
@@ -29,8 +29,8 @@ body:
   - type: textarea
     id: instructivos_despliegue
     attributes:
-      label: "🚀 Secuencia de Despliegue en Producción (PROD)"
-      description: "Secuencia técnica exacta a ejecutar por el GitHub Action en el entorno productivo."
+      label: "🚀 Secuencia de Despliegue en Certi y Prod"
+      description: "Secuencia técnica exacta a ejecutar por el GitHub Action en los entornos de certificación y productivo."
       placeholder: |
         Ejemplo:
         1. Ejecutar: src/parches/fix_hotfix.sql
