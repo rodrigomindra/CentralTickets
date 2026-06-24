@@ -86,9 +86,7 @@ jobs:
       - flujo_regular
       - flujo_express
 
-    if: |
-      always() &&
-      contains(needs.*.result, 'success')
+    if: always() && (needs.flujo_regular.result == 'success' || needs.flujo_express.result == 'success' || needs.flujo_regular.result == 'skipped' || needs.flujo_express.result == 'skipped')
 
     runs-on: ubuntu-latest
 
