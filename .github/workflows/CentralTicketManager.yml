@@ -1,9 +1,7 @@
 name: Ticket Manager
-
 run-name: "Ticket #${{ github.event.issue.number }} - ${{ github.event.issue.title }}"
 
 on:
-
   issues:
     types: [opened]
 
@@ -47,87 +45,83 @@ jobs:
           fi
 
   flujo_regular:
+
     needs: detectar_ticket
+
     if: needs.detectar_ticket.outputs.es_regular == 'true'
+
     uses: ./.github/workflows/ticket-regular.yml
+
     secrets: inherit
+
     with:
+
       issue_number: ${{ github.event.issue.number }}
+
       issue_title: ${{ github.event.issue.title }}
+
       issue_author: ${{ github.event.issue.user.login }}
 
   flujo_express:
+
     needs: detectar_ticket
+
     if: needs.detectar_ticket.outputs.es_express == 'true'
+
     uses: ./.github/workflows/ticket-express.yml
+
     secrets: inherit
+
     with:
+
       issue_number: ${{ github.event.issue.number }}
+
       issue_title: ${{ github.event.issue.title }}
+
       issue_author: ${{ github.event.issue.user.login }}
 
-  validar_cierre:
+  cierre_issue:
+
     needs:
       - flujo_regular
       - flujo_express
-    if: always() && (needs.flujo_regular.result == 'success' || needs.flujo_express.result == 'success' || needs.flujo_regular.result == 'skipped' || needs.flujo_express.result == 'skipped')
+
+    if: |
+      always() &&
+      contains(needs.*.result, 'success')
+
     runs-on: ubuntu-latest
+
     permissions:
       issues: write
+
     steps:
-      - name: Obtener labels actuales actualizados
-        id: labels
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const issue = await github.rest.issues.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number
-            });
-            const labels = issue.data.labels.map(l => l.name);
-            core.setOutput('labels', labels.join(','));
 
-      - name: Caso 1: Cerrar por Éxito (Finalizado)
-        if: contains(steps.labels.outputs.labels, 'finalizado')
+      - name: Cerrar Issue
+
         uses: actions/github-script@v7
+
         with:
+
           script: |
-            await github.rest.issues.createComment({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: '✅ **Despliegue Exitoso:** El ticket técnico ha finalizado correctamente. Se procede al cierre automático de la subissue.'
-            });
+
             await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              state: 'closed'
-            });
 
-      - name: Caso 2: Cerrar por Tx Rechazo
-        if: contains(steps.labels.outputs.labels, 'pendiente-reintento') || contains(steps.labels.outputs.labels, 'rechazado')
-        uses: actions/github-script@v7
-        with:
-          script: |
-            await github.rest.issues.createComment({
               owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              body: '❌ **Flujo Rechazado:** Este intento de despliegue ha sido cerrado.\n\n⚠️ **Nota:** Recuerde dirigirse al **Issue Padre** para generar una nueva subissue de reintento con las correcciones requeridas.'
-            });
-            await github.rest.issues.update({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              issue_number: context.issue.number,
-              state: 'closed'
-            });
 
-      - name: Caso 3: Mantener abierta
-        if: |
-          !contains(steps.labels.outputs.labels, 'finalizado') && 
-          !contains(steps.labels.outputs.labels, 'pendiente-reintento') &&
-          !contains(steps.labels.outputs.labels, 'rechazado')
+              repo: context.repo.repo,
+
+              issue_number: ${{ github.event.issue.number }},
+
+              state: 'closed'
+
+            })
+
+      - name: Confirmacion
+
         run: |
-          echo "La subissue permanece abierta para seguimiento manual."
+
+          echo "========================================"
+          echo "Issue cerrada automaticamente"
+          echo "Numero: ${{ github.event.issue.number }}"
+          echo "========================================"
