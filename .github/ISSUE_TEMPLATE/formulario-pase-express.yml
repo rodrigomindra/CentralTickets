@@ -1,79 +1,50 @@
-name: "Solicitud de Pase Express"
-
-description: "Pase simplificado para cambios de bajo riesgo."
-
-title: "[EXPRESS] Solicitud de Pase"
+name: "⚡ Solicitud de Pase Express"
+description: "Formulario técnico simplificado para un intento de despliegue rápido o de bajo riesgo."
+title: "[EXPRESS]: "
 
 labels: ["ticket-express"]
 
 body:
-
   - type: markdown
     attributes:
       value: |
-        # ⚡ Pase Express
-
-        Utilizar únicamente para cambios de bajo impacto y bajo riesgo.
+        # ⚡ Instructivo Técnico de Despliegue (Express)
+        Este subissue documenta un **intento específico de despliegue rápido**. Exclusivo para cambios de bajo impacto o parches urgentes. 
+        
+        Si este flujo resulta rechazado, este issue será cerrado y deberá abrir uno nuevo vinculado al Issue Padre para el reintento.
 
   - type: input
-    id: jira_subtask
+    id: id_commit
     attributes:
-      label: "🆔 Código Jira"
-      placeholder: "DATA-12345"
+      label: "🆔 Hash o ID del Commit"
+      description: "Identificador único (SHA o Tag) del código fuente que se desplegará."
+      placeholder: "e.g., 7a1b2c3 o DATA-12345"
     validations:
       required: true
 
-  - type: dropdown
-    id: squad
+  - type: markdown
     attributes:
-      label: "👥 Squad Solicitante"
-      options:
-        - "Squad Canales Digitales"
-        - "Squad Core Banking"
-        - "Squad Data & Analytics"
-        - "Squad CRM & Marketing"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: de_chapter_leader
-    attributes:
-      label: "🛡️ Data Engineer Referente"
-      options:
-        - "CL JUAN"
-        - "CL PEDRO"
-    validations:
-      required: true
-
-  - type: dropdown
-    id: analista_seguridad
-    attributes:
-      label: "🔍 Analista de Seguridad"
-      options:
-        - "SecOps - Luis"
-        - "SecOps - Carlos"
-    validations:
-      required: true
+      value: "---"
 
   - type: textarea
     id: instructivos_despliegue
     attributes:
-      label: "🚀 Instructivos de Despliegue"
-      description: "Indica las acciones a ejecutar."
+      label: "🚀 Secuencia de Despliegue en Producción (PROD)"
+      description: "Secuencia técnica exacta a ejecutar por el GitHub Action en el entorno productivo."
       placeholder: |
-        1. Ejecutar script.sql
-        2. Actualizar workflow
-        3. Validar ejecución
+        Ejemplo:
+        1. Ejecutar: src/parches/fix_hotfix.sql
+        2. Reiniciar pipeline de ingesta.
     validations:
       required: true
 
   - type: textarea
     id: instructivos_reversion
     attributes:
-      label: "🔄 Plan de Reversión"
-      description: "Indica cómo revertir el cambio."
+      label: "🔄 Plan de Contingencia y Reversión (Rollback)"
+      description: "Pasos críticos para restaurar el entorno de inmediato ante una falla en el despliegue."
       placeholder: |
-        1. Ejecutar rollback.sql
-        2. Restaurar versión anterior
+        1. Ejecutar script de rollback: src/rollback/rollback_hotfix.sql
+        2. Revertir versión del despliegue al commit anterior estable.
     validations:
       required: true
