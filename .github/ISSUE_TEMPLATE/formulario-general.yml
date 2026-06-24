@@ -1,0 +1,127 @@
+name: "🚀 Solicitud de Pase General"
+description: "Formulario principal (Issue Padre) para documentar la justificación de negocio, HU y aprobaciones globales."
+title: "DAOPCREDICORP: "
+
+labels: ["pase-general", "hu"]
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # 🏢 Formulario Macro de Pase a Producción
+        Este issue actúa como el **Contenedor Principal (Padre)**. Su propósito es consolidar la justificación de negocio y el impacto macro.
+        
+        ⚠️ **Nota para el equipo técnico:** Tras crear este issue, deberán generar y vincular manualmente los subissues técnicos específicos utilizando las plantillas correspondientes (**Pase Regular** o **Pase Express**) a través de la sección de subtareas (*Tasks*).
+
+  - type: markdown
+    attributes:
+      value: "## 🎯 Contexto de Negocio e Historia de Usuario"
+
+  - type: textarea
+    id: historia_usuario
+    attributes:
+      label: "📖 Historia de Usuario (HU) / Justificación"
+      description: "Describe el cambio estructurado bajo la perspectiva de valor y necesidad del negocio."
+      placeholder: |
+        Como: [Rol de negocio, ej. Analista de Riesgos, Product Owner]
+        Quiero: [Qué funcionalidad, reporte o modificación de datos se habilitará]
+        Para: [Cuál es el beneficio de negocio, meta o problema que se resuelve]
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivo_modificacion
+    attributes:
+      label: "💡 Motivo y Detalle del Cambio"
+      description: "Explica brevemente qué componentes se alteran a nivel macro (tablas, modelos, pipelines, reportes) y por qué es crítico realizar este despliegue ahora."
+      placeholder: "Se modifican las tablas maestras de clientes para integrar el nuevo scoring crediticio y optimizar el rendimiento de las consultas analíticas..."
+    validations:
+      required: true
+
+  - type: dropdown
+    id: squad
+    attributes:
+      label: "👥 Squad Solicitante"
+      options:
+        - "Squad Canales Digitales"
+        - "Squad Core Banking"
+        - "Squad Data & Analytics"
+        - "Squad CRM & Marketing"
+        - "Otro / Squad No Listado"
+    validations:
+      required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## 🛡️ Gobierno y Roles de Aprobación
+        Asigna a los responsables encargados de validar tanto la prioridad de negocio como el cumplimiento normativo y técnico.
+
+  - type: dropdown
+    id: product_owner
+    attributes:
+      label: "👑 Product Owner (PO)"
+      description: "Responsable de validar el valor del entregable y autorizar la prioridad del pase."
+      options:
+        - "Alan Turing (PO Canales)"
+        - "Ada Lovelace (PO Core)"
+        - "Grace Hopper (PO Data)"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: de_chapter_leader
+    attributes:
+      label: "🎓 Data Engineer Referente (Chapter Leader)"
+      description: "Líder técnico encargado de la primera etapa de revisión y conformidad arquitectónica."
+      options:
+        - "CL JUAN"
+        - "CL PEDRO"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: de_responsable
+    attributes:
+      label: "💻 Data Engineer Responsable"
+      description: "Ingeniero especialista encargado de supervisar y coordinar la ejecución técnica del despliegue."
+      options:
+        - "DE Pablo Ramirez"
+        - "DE Marcos Lopez"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: analista_seguridad
+    attributes:
+      label: "🔒 Analista de Seguridad"
+      description: "Encargado de auditar políticas de accesos, cumplimiento de seguridad y enmascaramiento (masking) de datos."
+      options:
+        - "SecOps - Luis"
+        - "SecOps - Carlos"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: custodio_tecnico
+    attributes:
+      label: "🔑 Custodio Técnico"
+      description: "Responsable de validar, auditar y dar la conformidad (V°B°) a la calidad de la información post-despliegue."
+      options:
+        - "Custodio - Finanzas"
+        - "Custodio - Riesgos"
+        - "Custodio - Clientes"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data_steward
+    attributes:
+      label: "📋 Data Steward"
+      description: "Garante del catálogo de datos, linaje técnico y consistencia con las definiciones formales de negocio."
+      options:
+        - "Steward - Alex"
+        - "Steward - Jean"
+    validations:
+      required: true
