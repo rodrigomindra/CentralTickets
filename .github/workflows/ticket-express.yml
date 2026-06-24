@@ -1,37 +1,26 @@
 name: Ticket Express
 
 on:
-
   workflow_call:
-
     inputs:
-
       issue_number:
         required: true
         type: string
-
       issue_title:
         required: true
         type: string
-
       issue_author:
         required: true
         type: string
 
 permissions:
-
   issues: write
 
 jobs:
-
   solicitud_pase:
-
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Inicializar solicitud
-
         run: |
           echo "Issue Express recibida"
           echo "Numero: ${{ inputs.issue_number }}"
@@ -39,264 +28,153 @@ jobs:
           echo "Solicitante: ${{ inputs.issue_author }}"
 
       - name: Registrar inicio
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Solicitud de pase Express recibida. Inicio del flujo.'
-
             })
 
   stage_revision_checklist:
-
     needs: solicitud_pase
-
     runs-on: ubuntu-latest
-
     environment: Revision-Checklist
-
     steps:
-
       - run: echo "Checklist aprobado"
-
       - name: Registrar checklist
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Checklist aprobado.'
-
             })
 
   stage_aprobacion_seguridad:
-
     needs: stage_revision_checklist
-
     runs-on: ubuntu-latest
-
     environment: Aprobacion-Seguridad
-
     steps:
-
       - run: echo "Seguridad aprobada"
-
       - name: Registrar seguridad
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Aprobación de Seguridad completada.'
-
             })
 
   deploy_cert:
-
     needs: stage_aprobacion_seguridad
-
     uses: ./.github/workflows/deploy-cert.yml
-
     secrets: inherit
-
     with:
-
       repository: SquadCredicorpData
-
       environment: CERT
 
   comentario_cert:
-
     needs: deploy_cert
-
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Registrar CERT
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Despliegue en CERT completado.'
-
             })
 
   deploy_prod:
-
     needs: comentario_cert
-
     uses: ./.github/workflows/deploy-prod.yml
-
     secrets: inherit
-
     with:
-
       repository: SquadCredicorpData
-
       environment: PROD
 
   comentario_prod:
-
     needs: deploy_prod
-
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Registrar PROD
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Despliegue en PROD completado.'
-
             })
 
   stage_validacion_tecnica:
-
     needs: comentario_prod
-
     runs-on: ubuntu-latest
-
     environment: Validacion-Tecnica-Produccion
-
     steps:
-
       - run: |
-          echo "Validando logs"
-          echo "Validando jobs"
-          echo "Validando pipelines"
+          echo "Validando logs, jobs y pipelines..."
           echo "Validacion tecnica OK"
 
-      - name: Registrar validacion tecnica
-
+      - name: Asignar Label Finalizado e Informar Éxito
         uses: actions/github-script@v7
-
         with:
-
           script: |
+            // Añadir el label requerido por CentralTicketManager
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number('${{ inputs.issue_number }}'),
+              labels: ['finalizado']
+            });
 
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              body: '✅ Validación técnica en Producción completada.'
-
-            })
-
-      - name: Registrar cierre exitoso
-
-        uses: actions/github-script@v7
-
-        with:
-
-          script: |
-
-            await github.rest.issues.createComment({
-
-              owner: context.repo.owner,
-
-              repo: context.repo.repo,
-
-              issue_number: Number('${{ inputs.issue_number }}'),
-
-              body: '✅ Flujo Express completado exitosamente. Pendiente de cierre automático de la Issue.'
-
-            })
+              body: '🚀 **Validación técnica completada:** Flujo Express finalizado exitosamente. Transfiriendo control al Manager para el cierre.'
+            });
 
   notificar_rechazo:
-
     needs:
+      - solicitud_pase
       - stage_revision_checklist
       - stage_aprobacion_seguridad
       - deploy_cert
       - comentario_cert
       - deploy_prod
+      - comentario_prod
       - stage_validacion_tecnica
-
-    if: failure()
-
+    # anyof(failed) evalúa si CUALQUIERA de los jobs anteriores falló o fue rechazado
+    if: always() && contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
-
     steps:
-
-      - run: |
-          echo "El flujo Express se detuvo por rechazo o error"
-
-      - name: Registrar error
-
+      - name: Asignar Label de Rechazo y Registrar Error
         uses: actions/github-script@v7
-
         with:
-
           script: |
+            // Añadir el label requerido por CentralTicketManager para reintentos
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: Number('${{ inputs.issue_number }}'),
+              labels: ['pendiente-reintento']
+            });
 
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              body: '❌ El flujo Express se detuvo por rechazo o error.'
-
-            })
+              body: '❌ **Flujo Express Detenido:** Se detectó un rechazo manual en las aprobaciones o un error crítico en el pipeline técnico.'
+            });
