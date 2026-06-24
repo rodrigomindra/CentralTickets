@@ -3,24 +3,35 @@ name: Ticket Manager
 run-name: "Ticket #${{ github.event.issue.number }} - ${{ github.event.issue.title }}"
 
 on:
+
   issues:
-    types:
-      - opened
+    types: [opened]
 
 permissions:
   issues: write
 
 jobs:
+
   detectar_ticket:
+
     runs-on: ubuntu-latest
+
     outputs:
+
       es_regular: ${{ steps.validacion.outputs.es_regular }}
+
       es_express: ${{ steps.validacion.outputs.es_express }}
+
     steps:
+
       - name: Detectar tipo de ticket
+
         id: validacion
+
         run: |
+
           LABELS='${{ join(github.event.issue.labels.*.name, ',') }}'
+
           echo "Labels detectados: $LABELS"
 
           if [[ "$LABELS" == *"ticket-regular"* ]]; then
