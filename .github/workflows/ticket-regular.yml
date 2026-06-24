@@ -1,37 +1,26 @@
 name: Ticket Regular
 
 on:
-
   workflow_call:
-
     inputs:
-
       issue_number:
         required: true
         type: string
-
       issue_title:
         required: true
         type: string
-
       issue_author:
         required: true
         type: string
 
 permissions:
-
   issues: write
 
 jobs:
-
   solicitud_pase:
-
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Inicializar solicitud
-
         run: |
           echo "Issue Regular recibida"
           echo "Numero: ${{ inputs.issue_number }}"
@@ -39,415 +28,220 @@ jobs:
           echo "Solicitante: ${{ inputs.issue_author }}"
 
       - name: Registrar inicio
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Solicitud de pase recibida. Inicio del flujo Regular.'
-
             })
 
   stage_revision_checklist:
-
     needs: solicitud_pase
-
     runs-on: ubuntu-latest
-
     environment: Revision-Checklist
-
     steps:
-
       - run: echo "Checklist aprobado"
-
       - name: Registrar checklist
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Checklist aprobado.'
-
             })
 
   stage_aprobacion_seguridad:
-
     needs: stage_revision_checklist
-
     runs-on: ubuntu-latest
-
     environment: Aprobacion-Seguridad
-
     steps:
-
       - run: echo "Seguridad aprobada"
-
       - name: Registrar seguridad
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Aprobación de Seguridad completada.'
-
             })
 
   stage_planificacion_y_configuracion_dataops:
-
     needs: stage_aprobacion_seguridad
-
     runs-on: ubuntu-latest
-
     environment: Planificacion-Ambiente-DataOps
-
     steps:
-
       - run: echo "Planificacion aprobada"
-
       - name: Registrar planificacion
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Planificación y configuración DataOps aprobada.'
-
             })
 
   deploy_cert:
-
     needs: stage_planificacion_y_configuracion_dataops
-
     uses: ./.github/workflows/deploy-cert.yml
-
     secrets: inherit
-
     with:
-
       repository: SquadCredicorpData
-
       environment: CERT
 
   stage_validacion_funcional_cert:
-
     needs: deploy_cert
-
     runs-on: ubuntu-latest
-
     environment: Validacion-Funcional-Certificacion
-
     steps:
-
       - run: |
           echo "Validacion funcional CERT completada"
           echo "Aprobado para Produccion"
 
       - name: Registrar validacion CERT
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Despliegue y validación funcional CERT completados.'
-
             })
 
   stage_pendiente_reintento:
-
     needs:
+      - solicitud_pase
       - stage_revision_checklist
       - stage_aprobacion_seguridad
       - stage_planificacion_y_configuracion_dataops
       - deploy_cert
       - stage_validacion_funcional_cert
-
-    if: |
-      always() &&
-      (
-        needs.stage_revision_checklist.result == 'failure' ||
-        needs.stage_aprobacion_seguridad.result == 'failure' ||
-        needs.stage_planificacion_y_configuracion_dataops.result == 'failure' ||
-        needs.deploy_cert.result == 'failure' ||
-        needs.stage_validacion_funcional_cert.result == 'failure'
-      )
-
+    # always() + control nativo para saber si alguno de los pasos de arriba falló (rechazo en environment)
+    if: always() && contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Marcar ticket rechazado
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.addLabels({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              labels: [
-                'rechazado',
-                'pendiente-reintento'
-              ]
-
-            })
+              labels: ['rechazado', 'pendiente-reintento']
+            });
 
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              body: '❌ El flujo fue rechazado antes de Producción. La Issue permanece abierta para corrección y posterior reintento.'
-
+              body: '❌ **Flujo Rechazado en Etapa Pre-Productiva:** El intento fue denegado o falló el despliegue en CERT. Transfiriendo control al Manager para procesar el cierre del ticket.'
             })
   
   deploy_prod:
-
-    if: success()
-  
     needs: stage_validacion_funcional_cert
-
+    # Garantiza que SOLO corra si la validación funcional en CERT terminó en éxito total
+    if: needs.stage_validacion_funcional_cert.result == 'success'
     uses: ./.github/workflows/deploy-prod.yml
-
     secrets: inherit
-
     with:
-
       repository: SquadCredicorpData
-
       environment: PROD
 
   stage_validacion_tecnica_prod:
-
     needs: deploy_prod
-
     runs-on: ubuntu-latest
-
     environment: Validacion-Tecnica-Produccion
-
     steps:
-
       - run: |
-          echo "Validando logs"
-          echo "Validando jobs"
-          echo "Validando pipelines"
+          echo "Validando logs, jobs y pipelines..."
           echo "Validacion tecnica OK"
 
       - name: Registrar validacion tecnica
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Validación técnica en Producción completada.'
-
             })
 
   stage_validacion_funcional_prod:
-
     needs: stage_validacion_tecnica_prod
-
     runs-on: ubuntu-latest
-
     environment: Validacion-Funcional-Produccion
-
     steps:
-
       - run: |
-          echo "Validacion funcional de negocio"
-          echo "Validacion funcional OK"
+          echo "Validacion funcional de negocio OK"
 
       - name: Registrar validacion funcional
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               body: '✅ Validación funcional en Producción completada. Pase aprobado.'
-
             })
 
   stage_aprobado:
-
-    needs:
-      - stage_validacion_funcional_prod
-  
-    if: needs.stage_validacion_funcional_prod.result == 'success'
-  
+    needs: stage_validacion_funcional_prod
     runs-on: ubuntu-latest
-
     steps:
-
       - name: Marcar ticket aprobado
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.addLabels({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
               labels: ['finalizado']
-
-            })
+            });
 
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              body: '✅ Pase Regular completado exitosamente. Pendiente de cierre automático de la Issue.'
-
+              body: '✅ Pase Regular completado exitosamente. Transfiriendo control al Manager para el cierre formal.'
             })
 
   stage_reversion_prod:
-
     needs:
       - deploy_prod
       - stage_validacion_tecnica_prod
       - stage_validacion_funcional_prod
-
-    if: |
-      always() &&
-      (
-        needs.deploy_prod.result == 'failure' ||
-        needs.stage_validacion_tecnica_prod.result == 'failure' ||
-        needs.stage_validacion_funcional_prod.result == 'failure'
-      )
-
+    # Evalúa fallos únicamente dentro del ciclo productivo real
+    if: always() && (needs.deploy_prod.result == 'failure' || needs.stage_validacion_tecnica_prod.result == 'failure' || needs.stage_validacion_funcional_prod.result == 'failure')
     runs-on: ubuntu-latest
-
     environment: Reversion-Produccion
-
     steps:
-
       - name: Registrar reversión requerida
-
         uses: actions/github-script@v7
-
         with:
-
           script: |
-
             await github.rest.issues.addLabels({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              labels: [
-                'reversion-requerida',
-                'pendiente-reintento'
-              ]
-
-            })
+              labels: ['reversion-requerida']
+            });
 
             await github.rest.issues.createComment({
-
               owner: context.repo.owner,
-
               repo: context.repo.repo,
-
               issue_number: Number('${{ inputs.issue_number }}'),
-
-              body: '🔄 Se requiere reversión en Producción. La Issue permanecerá abierta hasta completar la reversión y generar un nuevo intento.'
-
+              body: '🔄 **Alerta de Reversión en Producción:** Se ha detectado un fallo post-despliegue. La Issue permanecerá abierta para la ejecución manual del Rollback.'
             })
-
-      - run: |
-
-          echo "========================================"
-          echo "REVERSIÓN REQUERIDA"
-          echo "Pendiente de ejecución manual"
-          echo "========================================"
