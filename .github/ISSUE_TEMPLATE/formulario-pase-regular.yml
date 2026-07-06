@@ -31,8 +31,8 @@ body:
     attributes:
       label: "👥 Modo Despliegue"
       options:
-        - "register_sql_only"
-        - "execute_sp_only"
+        - "full"
+        - "full_no_sp"
     validations:
       required: true
 

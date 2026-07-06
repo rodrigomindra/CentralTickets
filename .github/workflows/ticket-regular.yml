@@ -21,15 +21,35 @@ jobs:
     runs-on: ubuntu-latest
     # Mapeamos los resultados del parser a outputs del JOB para el flujo regular
     outputs:
-      commit_sha: ${{ steps.parse.outputs.id_commit }}
-      modo_deploy: ${{ steps.parse.outputs.modo_despliegue }}
+      commit_sha: ${{ steps.extraer_datos.outputs.commit_sha }}
+      modo_deploy: ${{ steps.extraer_datos.outputs.modo_deploy }}
     steps:
       # A. Ejecutar el parseador oficial de IssueOps
       - name: Parsear Formulario Técnico Regular
         id: parse
-        uses: issue-ops/parser@v1
+        uses: issue-ops/parser@v5.0.0
         with:
           body: ${{ github.event.issue.body }}
+
+      # B. Procesar el JSON devuelto por la acción usando jq
+      - name: Extraer y Validar Datos del JSON
+        id: extraer_datos
+        run: |
+          JSON_DATA='${{ steps.parser.outputs.json }}'
+          
+          COMMIT=$(echo "$JSON_DATA" | jq -r '.id_commit // empty')
+          MODO=$(echo "$JSON_DATA" | jq -r '.modo_despliegue // empty')
+          
+          if [[ -z "$COMMIT" || "$COMMIT" == *"e.g."* ]]; then
+            echo "::error:: El ID del Commit no es válido o está vacío."
+            exit 1
+          fi
+          
+          echo "Commit detectado: $COMMIT"
+          echo "Modo detectado: $MODO"
+          
+          echo "commit_sha=$COMMIT" >> $GITHUB_OUTPUT
+          echo "modo_deploy=$MODO" >> $GITHUB_OUTPUT
 
       - name: Inicializar solicitud
         run: |
@@ -37,9 +57,6 @@ jobs:
           echo "Numero: ${{ inputs.issue_number }}"
           echo "Titulo: ${{ inputs.issue_title }}"
           echo "Solicitante: ${{ inputs.issue_author }}"
-          echo "----------------------------------------"
-          echo "Commit a desplegar: ${{ steps.parse.outputs.id_commit }}"
-          echo "Modo de despliegue: ${{ steps.parse.outputs.modo_despliegue }}"
 
       - name: Registrar inicio
         uses: actions/github-script@v7
@@ -49,7 +66,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: Number('${{ inputs.issue_number }}'),
-              body: '✅ Solicitud de pase recibida.\n\n**Detalles Técnicos Detectados:**\n- **Commit:** `${{ steps.parse.outputs.id_commit }}`\n- **Modo:** `${{ steps.parse.outputs.modo_despliegue }}`\n\nInicio del flujo Regular.'
+              body: '✅ Solicitud de pase recibida.\n\n**Detalles Técnicos Detectados:**\n- **Commit:** `${{ steps.extraer_datos.outputs.commit_sha }}`\n- **Modo:** `${{ steps.extraer_datos.outputs.modo_deploy }}`\n\nInicio del flujo Regular.'
             })
 
   stage_revision_checklist:
