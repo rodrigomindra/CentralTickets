@@ -26,6 +26,16 @@ body:
     attributes:
       value: "---"
 
+  - type: dropdown
+    id: modo_despliegue
+    attributes:
+      label: "👥 Modo Despliegue"
+      options:
+        - "full"
+        - "full_no_sp"
+    validations:
+      required: true
+
   - type: textarea
     id: instructivos_despliegue
     attributes:

@@ -26,6 +26,16 @@ body:
     attributes:
       value: "---"
 
+  - type: dropdown
+    id: modo_despliegue
+    attributes:
+      label: "👥 Modo Despliegue"
+      options:
+        - "register_sql_only"
+        - "execute_sp_only"
+    validations:
+      required: true
+
   - type: textarea
     id: instructivos_certificacion
     attributes:

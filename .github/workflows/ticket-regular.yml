@@ -19,13 +19,27 @@ permissions:
 jobs:
   solicitud_pase:
     runs-on: ubuntu-latest
+    # Mapeamos los resultados del parser a outputs del JOB para el flujo regular
+    outputs:
+      commit_sha: ${{ steps.parse.outputs.id_commit }}
+      modo_deploy: ${{ steps.parse.outputs.modo_despliegue }}
     steps:
+      # A. Ejecutar el parseador oficial de IssueOps
+      - name: Parsear Formulario Técnico Regular
+        id: parse
+        uses: issue-ops/parser@v1
+        with:
+          body: ${{ github.event.issue.body }}
+
       - name: Inicializar solicitud
         run: |
           echo "Issue Regular recibida"
           echo "Numero: ${{ inputs.issue_number }}"
           echo "Titulo: ${{ inputs.issue_title }}"
           echo "Solicitante: ${{ inputs.issue_author }}"
+          echo "----------------------------------------"
+          echo "Commit a desplegar: ${{ steps.parse.outputs.id_commit }}"
+          echo "Modo de despliegue: ${{ steps.parse.outputs.modo_despliegue }}"
 
       - name: Registrar inicio
         uses: actions/github-script@v7
@@ -35,7 +49,7 @@ jobs:
               owner: context.repo.owner,
               repo: context.repo.repo,
               issue_number: Number('${{ inputs.issue_number }}'),
-              body: '✅ Solicitud de pase recibida. Inicio del flujo Regular.'
+              body: '✅ Solicitud de pase recibida.\n\n**Detalles Técnicos Detectados:**\n- **Commit:** `${{ steps.parse.outputs.id_commit }}`\n- **Modo:** `${{ steps.parse.outputs.modo_despliegue }}`\n\nInicio del flujo Regular.'
             })
 
   stage_revision_checklist:
