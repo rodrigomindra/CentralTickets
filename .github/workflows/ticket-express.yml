@@ -40,17 +40,15 @@ jobs:
       - name: Extraer y Validar Datos del JSON
         id: extraer_datos
         run: |
-          # Guardamos el JSON de la acción en una variable de entorno de forma segura
-          JSON_DATA='${{ steps.parser.outputs.json }}'
+          JSON_DATA='${{ steps.parse.outputs.json }}'
           
-          # Extraemos los campos usando los IDs de tu formulario
           COMMIT=$(echo "$JSON_DATA" | jq -r '.id_commit // empty')
           MODO=$(echo "$JSON_DATA" | jq -r '.modo_despliegue // empty')
           
           echo "Commit detectado: $COMMIT"
           echo "Modo detectado: $MODO"
           
-          # Guardamos en los outputs del step para heredarlos al Job
+          # Guardamos en los outputs (si van vacíos, pasarán vacíos a las siguientes etapas)
           echo "commit_sha=$COMMIT" >> $GITHUB_OUTPUT
           echo "modo_deploy=$MODO" >> $GITHUB_OUTPUT
 

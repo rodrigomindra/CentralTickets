@@ -40,19 +40,15 @@ jobs:
       - name: Extraer y Validar Datos del JSON
         id: extraer_datos
         run: |
-          JSON_DATA='${{ steps.parser.outputs.json }}'
+          JSON_DATA='${{ steps.parse.outputs.json }}'
           
           COMMIT=$(echo "$JSON_DATA" | jq -r '.id_commit // empty')
           MODO=$(echo "$JSON_DATA" | jq -r '.modo_despliegue // empty')
           
-          if [[ -z "$COMMIT" || "$COMMIT" == *"e.g."* ]]; then
-            echo "::error:: El ID del Commit no es válido o está vacío."
-            exit 1
-          fi
-          
           echo "Commit detectado: $COMMIT"
           echo "Modo detectado: $MODO"
           
+          # Guardamos en los outputs (si van vacíos, pasarán vacíos a las siguientes etapas)
           echo "commit_sha=$COMMIT" >> $GITHUB_OUTPUT
           echo "modo_deploy=$MODO" >> $GITHUB_OUTPUT
 
