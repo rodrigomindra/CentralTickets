@@ -42,13 +42,15 @@ jobs:
         run: |
           JSON_DATA='${{ steps.parse.outputs.json }}'
           
+          # Extraemos el valor del commit
           COMMIT=$(echo "$JSON_DATA" | jq -r '.id_commit // empty')
-          MODO=$(echo "$JSON_DATA" | jq -r '.modo_despliegue // empty')
+
+          MODO=$(echo "$JSON_DATA" | jq -r 'if (.modo_despliegue | type) == "array" then .modo_despliegue[0] else .modo_despliegue end // empty')
           
           echo "Commit detectado: $COMMIT"
           echo "Modo detectado: $MODO"
           
-          # Guardamos en los outputs (si van vacíos, pasarán vacíos a las siguientes etapas)
+          # Guardamos en los outputs de forma segura en una sola línea
           echo "commit_sha=$COMMIT" >> $GITHUB_OUTPUT
           echo "modo_deploy=$MODO" >> $GITHUB_OUTPUT
 
