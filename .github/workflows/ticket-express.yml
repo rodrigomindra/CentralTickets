@@ -24,15 +24,19 @@ jobs:
       commit_sha: ${{ steps.extraer_datos.outputs.commit_sha }}
       modo_deploy: ${{ steps.extraer_datos.outputs.modo_deploy }}
     steps:
-      # A. Ejecutar el parseador oficial de IssueOps
-      - name: Parsear Formulario Técnico Express
+      # 1. Descarga el código del repositorio al contenedor
+      - name: Checkout del Repositorio
+        uses: actions/checkout@v4
+
+      # 2. Ejecutar el parseador oficial de IssueOps
+      - name: Parsear Formulario Técnico Regular
         id: parse
         uses: issue-ops/parser@v5.0.0
         with:
           body: ${{ github.event.issue.body }}
           issue-form-template: formulario-pase-express.yml
 
-      # B. Procesar el JSON devuelto por la acción usando jq
+      # 3. Procesar el JSON devuelto por la acción usando jq
       - name: Extraer y Validar Datos del JSON
         id: extraer_datos
         run: |
