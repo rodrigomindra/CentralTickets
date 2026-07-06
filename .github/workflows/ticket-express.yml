@@ -30,7 +30,7 @@ jobs:
         uses: issue-ops/parser@v5.0.0
         with:
           body: ${{ github.event.issue.body }}
-          issue-form-template: .github/ISSUE_TEMPLATE/formulario-pase-express.yml
+          issue-form-template: formulario-pase-express.yml
 
       # B. Procesar el JSON devuelto por la acción usando jq
       - name: Extraer y Validar Datos del JSON
